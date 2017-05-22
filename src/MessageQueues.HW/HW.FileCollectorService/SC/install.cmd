@@ -1,0 +1,2 @@
+for %%A in (..\HW.FileCollectorService.exe) DO set P=%%~fA
+sc create HW.Collector binPath="%P% -props:-props:scanInterval=5000|logPath=C:\winserv\collector.log|processLocation=c:\winserv\processLocation\|outputsLocation=C:\winserv\outputs\|Endpoint=sb://epbygrow0257t3.grodno.epam.com/ServiceBusDefaultNamespace|StsEndpoint=https://epbygrow0257t3.grodno.epam.com:9355/ServiceBusDefaultNamespace|RuntimePort=9354|ManagementPort=9355"
