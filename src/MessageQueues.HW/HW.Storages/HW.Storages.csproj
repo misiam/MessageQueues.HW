@@ -69,6 +69,10 @@
       <Project>{9B08C342-AD29-478F-8580-BCD3DA97B1CB}</Project>
       <Name>HW.Logging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\HW.Management.Common\HW.Management.Common.csproj">
+      <Project>{0f3a6c72-4f45-4948-8ebb-2ac0433f7468}</Project>
+      <Name>HW.Management.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\HW.Utils\HW.Utils.csproj">
       <Project>{d5fe1fc2-850c-4f7a-b8cc-b36047551cf0}</Project>
       <Name>HW.Utils</Name>

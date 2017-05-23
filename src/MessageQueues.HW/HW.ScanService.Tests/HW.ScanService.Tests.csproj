@@ -56,6 +56,10 @@
     <Compile Include="ServiceBusTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\HW.Management.Common\HW.Management.Common.csproj">
+      <Project>{0f3a6c72-4f45-4948-8ebb-2ac0433f7468}</Project>
+      <Name>HW.Management.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\HW.ScanService.Scanner\HW.ScanService.Scanner.csproj">
       <Project>{1ef0a9cb-dd27-4551-8a0f-3de85518e744}</Project>
       <Name>HW.ScanService.Scanner</Name>

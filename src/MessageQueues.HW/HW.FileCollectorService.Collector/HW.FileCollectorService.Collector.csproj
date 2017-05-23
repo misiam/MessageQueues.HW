@@ -76,9 +76,17 @@
     <Compile Include="Services\PdfAggregatorFilesHandler.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\HW.Definitions\HW.Definitions.csproj">
+      <Project>{3bb3ad20-e64f-4dc3-a461-912cbb0e46d1}</Project>
+      <Name>HW.Definitions</Name>
+    </ProjectReference>
     <ProjectReference Include="..\HW.Logging\HW.Logging.csproj">
       <Project>{9b08c342-ad29-478f-8580-bcd3da97b1cb}</Project>
       <Name>HW.Logging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HW.Management.Common\HW.Management.Common.csproj">
+      <Project>{0f3a6c72-4f45-4948-8ebb-2ac0433f7468}</Project>
+      <Name>HW.Management.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\HW.Storages\HW.Storages.csproj">
       <Project>{4235b402-9e3b-4705-be3a-5970b19d39bd}</Project>

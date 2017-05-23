@@ -14,7 +14,7 @@ namespace HW.ScanService
         private readonly Scanner.Services.Scanner _scanner;
         private static ILogger _logger;
 
-        public ScannerService(ServiceProperties props)
+        public ScannerService(BaseProperties props)
         {
 
             var logger = HW.Logging.Logger.Current;
@@ -26,17 +26,18 @@ namespace HW.ScanService
                 logger.LogInfo(property.Key + "|" +property.Value);
             }
 
-            var folders = props.Properties["inputFolders"].Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            //var folders = props.Properties["inputFolders"].Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
             logger.LogInfo("scanInterval");
-            int interval;
-            if (!props.Properties.ContainsKey("scanInterval") || !int.TryParse(props.Properties["scanInterval"], out interval))
-            {
-                interval = 5 * 1000;
-            }
+            //int interval;
+            //if (!props.Properties.ContainsKey("scanInterval") || !int.TryParse(props.Properties["scanInterval"], out interval))
+            //{
+            //    interval = 5 * 1000;
+            //}
 
-            IStorageService storageService = GetStorage(props);
-            _scanner = new Scanner.Services.Scanner(folders, interval, storageService);
+            //IStorageService storageService = GetStorage(props);
+            var scanProperties = new ScanProperties(props);
+            _scanner = new Scanner.Services.Scanner(scanProperties);
 
         }
 
@@ -55,7 +56,7 @@ namespace HW.ScanService
             }
 
 
-            var props = ServiceProperties.GetProperties(args);
+            var props = BaseProperties.GetProperties(args);
             if (args.Length > 0 && args[0].Equals("console"))
             {
                 var serv = new ScannerService(props);
@@ -114,12 +115,6 @@ namespace HW.ScanService
         }
 
 
-        private IStorageService GetStorage(ServiceProperties props)
-        {
-            //return new LocalFolderStorage(@"C:\winserv\outputs");
-            return new QueueChunkedStorage(new QueueChunkedServiceProperties(props));
-        }
-
         public void StartScanning()
         {
             _scanner.StartScan();
@@ -132,7 +127,7 @@ namespace HW.ScanService
         private static LogFactory GetLogFactory(string[] args, string defaultPath)
         {
 
-            string logPath = LogServiceProperties.GetLogPath(args, defaultPath);
+            string logPath = LogBaseProperties.GetLogPath(args, defaultPath);
             var logConfig = new LoggingConfiguration();
 
             var target = new FileTarget()

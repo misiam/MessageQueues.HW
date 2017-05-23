@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using HW.Definitions;
 using HW.Logging;
+using HW.Management.Common;
 using HW.Utils.Services;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
@@ -12,38 +11,29 @@ namespace HW.Storages
 {
     public class QueueChunkedStorage : IStorageService
     {
-        private readonly QueueChunkedServiceProperties _properties;
+        private readonly QueueChunkedBaseProperties _properties;
         private ILogger _logger;
         const string ToDownloadQueueName = "to_download_queue";
 
         public delegate void NewFileHandler(object obj, string fileName, Stream stream);
         public event NewFileHandler NewFileAppeared;
 
-        public QueueChunkedStorage(QueueChunkedServiceProperties properties  )
+        public QueueChunkedStorage(QueueChunkedBaseProperties properties  )
         {
             _logger = Logger.Current;
             _properties = properties;
         }
 
-        private void CreateQueueIfNotExists(NamespaceManager namespaceManager)
-        {
-            if (!namespaceManager.QueueExists(ToDownloadQueueName))
-            {
-                _logger.LogInfo("CreateQueue " + ToDownloadQueueName);
-                namespaceManager.CreateQueue(ToDownloadQueueName);
-            }
-
-        }
 
         public void SaveToStorage(string filePath)
         {
             _logger.LogInfo("SaveToStorage ");
 
-            var cnString = QueueChunkedStorage.CreateConnectionString(_properties);
+            var cnString = ServiceBusHelper.CreateConnectionString(_properties);
 
             var namespaceManager = NamespaceManager.CreateFromConnectionString(cnString);
 
-            CreateQueueIfNotExists(namespaceManager);
+            ServiceBusHelper.CreateQueueIfNotExists(namespaceManager, ToDownloadQueueName);
 
             var fileQueue = $"file_{Guid.NewGuid()}";
             _logger.LogInfo("CreateQueue " + fileQueue);
@@ -105,7 +95,7 @@ namespace HW.Storages
         {
             _logger.LogInfo($"   GetFromQueue {toDownloadQueue.ToDownloadQueue} file {toDownloadQueue.FileName}");
 
-            var cnString = QueueChunkedStorage.CreateConnectionString(_properties);
+            var cnString = ServiceBusHelper.CreateConnectionString(_properties);
             var queueClient = QueueClient.CreateFromConnectionString(cnString, toDownloadQueue.ToDownloadQueue, ReceiveMode.ReceiveAndDelete);
 
 
@@ -137,11 +127,11 @@ namespace HW.Storages
 
         public void GetToDownloadQueueItem()
         {
-            var cnString = QueueChunkedStorage.CreateConnectionString(_properties);
+            var cnString = ServiceBusHelper.CreateConnectionString(_properties);
             var namespaceManager = NamespaceManager.CreateFromConnectionString(cnString);
 
-            CreateQueueIfNotExists(namespaceManager);
-            
+            ServiceBusHelper.CreateQueueIfNotExists(namespaceManager, ToDownloadQueueName);
+
             var toDownloadQueueClient = QueueClient.CreateFromConnectionString(cnString, ToDownloadQueueName, ReceiveMode.ReceiveAndDelete);
 
             BrokeredMessage message;
@@ -161,7 +151,7 @@ namespace HW.Storages
 
         public void OnToDownloadQueueItem()
         {
-            var cnString = QueueChunkedStorage.CreateConnectionString(_properties);
+            var cnString = ServiceBusHelper.CreateConnectionString(_properties);
 
             var toDownloadQueueClient = QueueClient.CreateFromConnectionString(cnString, ToDownloadQueueName, ReceiveMode.ReceiveAndDelete);
             toDownloadQueueClient.OnMessage(message =>
@@ -173,19 +163,7 @@ namespace HW.Storages
             });
         }
 
-        //Endpoint=sb://epbygrow0257t3.grodno.epam.com/ServiceBusDefaultNamespace;StsEndpoint=https://epbygrow0257t3.grodno.epam.com:9355/ServiceBusDefaultNamespace;RuntimePort=9354;ManagementPort=9355
-        public static string CreateConnectionString(QueueChunkedServiceProperties properties)
-        {
-            var cnsBuilder = new ServiceBusConnectionStringBuilder();
-            cnsBuilder.Endpoints.Add(properties.Endpoint);
-            cnsBuilder.RuntimePort = properties.RuntimePort;
-            cnsBuilder.ManagementPort = properties.ManagementPort;
-            cnsBuilder.StsEndpoints.Add(properties.StsEndpoint);
 
-            string cnString = cnsBuilder.ToString();
-
-            return cnString;
-        }
 
     }
 }

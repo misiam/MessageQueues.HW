@@ -42,9 +42,12 @@
   <ItemGroup>
     <Compile Include="Files\FileSystemHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\CollectorServiceProperties.cs" />
-    <Compile Include="Services\LogServiceProperties.cs" />
-    <Compile Include="Services\QueueChunkedServiceProperties.cs" />
+    <Compile Include="Services\CollectorProperties.cs" />
+    <Compile Include="Services\LogBaseProperties.cs" />
+    <Compile Include="Services\PropsNames.cs" />
+    <Compile Include="Services\QueueChunkedBaseProperties.cs" />
+    <Compile Include="Services\BaseProperties.cs" />
+    <Compile Include="Services\ScanProperties.cs" />
     <Compile Include="Services\ServiceProperties.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

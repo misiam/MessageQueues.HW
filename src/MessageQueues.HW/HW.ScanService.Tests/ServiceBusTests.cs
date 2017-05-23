@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using HW.Management.Common;
 using HW.Storages;
 using HW.Utils.Services;
 using Microsoft.ServiceBus;
@@ -82,7 +79,7 @@ namespace HW.ScanService.Tests
         [TestMethod]
         public void SendFileChunksTest()
         {
-            var properties = new QueueChunkedServiceProperties(COMMAND_LINE_ARGS);
+            var properties = new QueueChunkedBaseProperties(COMMAND_LINE_ARGS);
             var queueChunkedStorage = new QueueChunkedStorage(properties);
 
             queueChunkedStorage.SaveToStorage(@"..\..\..\Samples\Img__001.PNG");
@@ -92,7 +89,7 @@ namespace HW.ScanService.Tests
         [TestMethod]
         public void GetToDownloadQueue()
         {
-            var properties = new QueueChunkedServiceProperties(COMMAND_LINE_ARGS);
+            var properties = new QueueChunkedBaseProperties(COMMAND_LINE_ARGS);
             var queueChunkedStorage = new QueueChunkedStorage(properties);
             queueChunkedStorage.GetToDownloadQueueItem();
 
@@ -102,7 +99,7 @@ namespace HW.ScanService.Tests
         [TestMethod]
         public void OnToDownloadQueue()
         {
-            var properties = new QueueChunkedServiceProperties(COMMAND_LINE_ARGS);
+            var properties = new QueueChunkedBaseProperties(COMMAND_LINE_ARGS);
             var queueChunkedStorage = new QueueChunkedStorage(properties);
             queueChunkedStorage.OnToDownloadQueueItem();
 
@@ -110,8 +107,8 @@ namespace HW.ScanService.Tests
 
         private string GetServiseBusConnectionString(string commandLineArgs)
         {
-            var properties = new QueueChunkedServiceProperties(commandLineArgs);
-            string cnString = QueueChunkedStorage.CreateConnectionString(properties);
+            var properties = new QueueChunkedBaseProperties(commandLineArgs);
+            string cnString = ServiceBusHelper.CreateConnectionString(properties);
 
 
             return cnString;

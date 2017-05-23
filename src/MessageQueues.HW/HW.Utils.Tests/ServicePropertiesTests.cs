@@ -24,11 +24,11 @@ namespace HW.Utils.Tests
 
             string propArgs =
                 $"inputFolders={inputPart}|scanInterval={scanInterval}|logPath={logPath}";
-            ServiceProperties props = new ServiceProperties(propArgs);
+            BaseProperties props = new BaseProperties(propArgs);
 
-            Assert.IsTrue(props.Properties["inputFolders"] == inputPart);
-            Assert.IsTrue(props.Properties["scanInterval"] == scanInterval);
-            Assert.IsTrue(props.Properties["logPath"] == logPath);
+            Assert.IsTrue(props.Properties[PropsNames.InputFolders] == inputPart);
+            Assert.IsTrue(props.Properties[PropsNames.ScanIntervalInMilliseconds] == scanInterval);
+            Assert.IsTrue(props.Properties[PropsNames.LogPath] == logPath);
 
         }
 
@@ -37,7 +37,7 @@ namespace HW.Utils.Tests
         {
             string logProp = @"C:\winserv\scanner.log";
             string[] args = new[] { @"-props:inputFolders=C:\winserv\inputs\1;C:\winserv\inputs\2|scanInterval=5000|logPath=" + logProp };
-            string logPath = LogServiceProperties.GetLogPath(args, logProp);
+            string logPath = LogBaseProperties.GetLogPath(args, logProp);
 
             Assert.IsTrue(logProp == logPath);
         }
@@ -58,7 +58,7 @@ namespace HW.Utils.Tests
                 $"|Endpoint={endpoint}|RuntimePort={runtimePort}|ManagementPort={managementPort}";
             string[] args = new[] {commandLine};
 
-            var serviceProperties = new ServiceProperties(commandLine);
+            var serviceProperties = new BaseProperties(commandLine);
             
 
 

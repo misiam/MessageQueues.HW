@@ -3,35 +3,42 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using HW.Definitions;
 using HW.Logging;
+using HW.Management.Common;
 using HW.Storages;
 using HW.Utils.Files;
+using HW.Utils.Services;
 
 namespace HW.ScanService.Scanner.Services
 {
     public class Scanner
     {
-        private string[] _inputFolders;
-        private int _interval;
         private readonly IStorageService _storageService;
-
         private ILogger _logger = Logger.Current;
 
-        Thread workingThread;
-        ManualResetEvent workStop;
-        AutoResetEvent newFile;
+        Thread scanningThread;
+        AutoResetEvent scanStop;
+        private ScanProperties _props;
+        private ServiceBusClient _serviceBusClient;
 
-        public Scanner(string[] inputFolders, int interval, IStorageService storageService)
+        public Scanner(ScanProperties props)
         {
-            _inputFolders = inputFolders;
-            _interval = interval;
-            _storageService = storageService;
+            var queueChunkedBaseProperties = new QueueChunkedBaseProperties(props);
+            _storageService = GetStorage(queueChunkedBaseProperties);
+            _props = props;
 
-            FileSystemHelper.CreateDirectoryIfNotExists(_inputFolders);
+            FileSystemHelper.CreateDirectoryIfNotExists(props.InputLocations);
 
-            workStop = new ManualResetEvent(false);
-            newFile = new AutoResetEvent(false);
-            workingThread = new Thread(Scanning);
+            scanStop = new AutoResetEvent(false);
+            scanningThread = new Thread(Scanning);
+
+
+            string serviceUrl = ServiceBusHelper.CreateConnectionString(queueChunkedBaseProperties);
+            _serviceBusClient = new ServiceBusClient(serviceUrl);
+            _serviceBusClient.InitTopics();
+            _serviceBusClient.OnPropsUpdated(Topics.BROADCAST_PROPERTIES_SUBS_SCANNER, OnPropsSubscription);
+            _serviceBusClient.OnSendServiceCommand(Topics.RUN_SERVICE_COMMAND_SUBS_SCANNER, OnRunServiceCommand);
         }
 
 
@@ -41,9 +48,10 @@ namespace HW.ScanService.Scanner.Services
             {
                 _logger.LogInfo("Scanning... ");
 
-                var files = GetFiles(_inputFolders);
 
-                if (workStop.WaitOne(TimeSpan.Zero))
+                var files = GetFiles(_props.InputLocations);
+
+                if (scanStop.WaitOne(TimeSpan.Zero))
                     return;
 
                 foreach (var fileInfo in files)
@@ -64,7 +72,7 @@ namespace HW.ScanService.Scanner.Services
                 }
 
             }
-            while (WaitHandle.WaitAny(new WaitHandle[] { workStop, newFile }, _interval) != 0);
+            while (WaitHandle.WaitAny(new WaitHandle[] { scanStop }, _props.ServiceProperties.ScanInterval) != 0);
         }
         private IEnumerable<FileInfo> GetFiles(string[] inputFolders)
         {
@@ -80,15 +88,69 @@ namespace HW.ScanService.Scanner.Services
             return files.OrderBy(f=> f.CreationTime);
         }
 
+        private IStorageService GetStorage(QueueChunkedBaseProperties props)
+        {
+            return new QueueChunkedStorage(props);
+        }
+
+        private void OnPropsSubscription(string propsAgrs)
+        {
+
+            _logger.LogInfo("OnPropsSubscription: " + propsAgrs);
+            try
+            {
+                var props = new ScanProperties(propsAgrs);
+                _props.Update(props);
+                FileSystemHelper.CreateDirectoryIfNotExists(_props.InputLocations);
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("OnPropsSubscription: " + e);
+                throw;
+            }
+        }
+        private void OnRunServiceCommand(ServiceCommandType commandType)
+        {
+            switch (commandType)
+            {
+                case ServiceCommandType.Start:
+                    {
+                        if (scanningThread == null || !scanningThread.IsAlive)
+                        {
+                            scanningThread = new Thread(Scanning);
+                            scanStop = new AutoResetEvent(false);
+                            StartScan();
+                            _logger.LogInfo("Scanning started");
+                        }
+                        else
+                        {
+                            _logger.LogInfo("Scanning already started");
+                        }
+                        break;
+                    }
+                case ServiceCommandType.Stop:
+                    {
+                        scanStop.Set();
+                        scanningThread.Join(_props.ServiceProperties.ScanInterval);
+                        _logger.LogInfo("Scanning stopped");
+                        break;
+                    }
+                default:
+                    {
+                        throw new NotImplementedException();
+                    }
+            }
+        }
 
         public void StartScan()
         {
-            workingThread.Start();
+            scanningThread.Start();
         }
 
         public void StopScanning()
         {
-            workingThread.Abort();
+            scanningThread.Abort();
         }
     }
 }

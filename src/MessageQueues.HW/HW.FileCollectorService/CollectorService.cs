@@ -15,7 +15,7 @@ namespace HW.FileCollectorService
 
         private static ILogger _logger;
 
-        public CollectorService(ServiceProperties props)
+        public CollectorService(BaseProperties props)
         {
             var logger = HW.Logging.Logger.Current;
             _logger = logger;
@@ -32,15 +32,10 @@ namespace HW.FileCollectorService
 
 
             logger.LogInfo("scanInterval");
-            int interval;
-            if (!props.Properties.ContainsKey("scanInterval") || !int.TryParse(props.Properties["scanInterval"], out interval))
-            {
-                interval = 5 * 1000;
-            }
+            
 
 
-            QueueChunkedStorage storageService = GetQueueChunkedStorage(new QueueChunkedServiceProperties(props));
-            _collector = new Collector.Services.Collector(new CollectorServiceProperties(props), interval, storageService);
+            _collector = new Collector.Services.Collector(new CollectorProperties(props));
 
         }
 
@@ -60,7 +55,7 @@ namespace HW.FileCollectorService
             }
 
 
-            var props = ServiceProperties.GetProperties(args);
+            var props = BaseProperties.GetProperties(args);
             if (args.Length > 0 && args[0].Equals("console"))
             {
                 var serv = new CollectorService(props);
@@ -121,12 +116,6 @@ namespace HW.FileCollectorService
             }
         }
 
-        private QueueChunkedStorage GetQueueChunkedStorage(QueueChunkedServiceProperties props)
-        {
-            return new QueueChunkedStorage(props);
-        }
-
-
         public void StartCollecting()
         {
             _collector.StartScan();
@@ -140,7 +129,7 @@ namespace HW.FileCollectorService
         private static LogFactory GetLogFactory(string[] args, string defaultPath)
         {
 
-            string logPath = LogServiceProperties.GetLogPath(args, defaultPath);
+            string logPath = LogBaseProperties.GetLogPath(args, defaultPath);
             var logConfig = new LoggingConfiguration();
 
             var target = new FileTarget()
